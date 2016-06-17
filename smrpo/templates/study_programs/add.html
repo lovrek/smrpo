@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+{% load bootstrap3 %}
+<form action="" method="post">
+    {% csrf_token %}
+    <div class="well bs-component ">
+        {% bootstrap_form form %}
+    </div>
+    <div class="col-md-6">
+        <div class="well bs-component">
+            <h4>Redni:</h4>
+            {% bootstrap_form regular_slots_form %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="well bs-component">
+            <h4>Izredni:</h4>
+            {% bootstrap_form irregular_slots_form %}
+        </div>
+    </div>
+    <input type="submit" value="Shrani" class="btn btn-success"/>
+    <a href="{% url 'study_programs:index' %}" class="btn btn-default">Prekliči</a>
+</form>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+
+{% load bootstrap3 %}
+
+{% block title %}Dodaj uporabniški dačun{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="col-md-4 col-md-offset-4">
+
+        <h3>Registracija z administratorskimi pravicami</h3>
+        <h4>{{ user_profile }}</h4>
+
+        <form action="{{ url }}" method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <input type="submit" value="Dodaj">
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

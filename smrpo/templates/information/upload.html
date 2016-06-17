@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% load filters %}
+{% load staticfiles %}
+
+{% block head %}
+{% endblock %}
+
+
+{% block body %}
+{% if documents %}
+        <ul>
+        {% for document in documents %}
+            <li><a href="{{ document.file.url }}">{{ document.file.name }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Ni datotek.</p>
+    {% endif %}
+
+        <!-- Upload form. Note enctype attribute! -->
+        <form action="{% url 'informations:uploadFile' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <p>{{ form.non_field_errors }}</p>
+            <p>{{ form.file.label_tag }} {{ form.file.help_text }}</p>
+            <p>
+                {{ form.file.errors }}
+                {{ form.file }}
+            </p>
+            <p><input type="submit" class="btn btn-primary" value="Uvozi" /></p>
+        </form>
+{% endblock %}
+
+{% block javascript %}
+{% endblock %}

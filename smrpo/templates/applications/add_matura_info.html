@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% load filters %}
+{% load staticfiles %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/ajax-bootstrap-select.css' %}">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <style type=text/css>
+        .error {
+            color: red;
+        }
+
+        .glyphicon-remove{
+            float: right;
+            margin: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %} Podatki o uspehu {% endblock %}
+
+{% block body %}
+    {% load bootstrap3 %}
+
+    <h1>Uredi uspeh kandidata {{ student.user.first_name }} {{ student.user.last_name }} {{ student.second_last_name|default_if_none:"" }} </h1>
+
+    <form id="form" action="/application/{{student.pk}}/add_matura_info" method="post">
+        {% csrf_token %}
+        <div id="splosno-o-maturi" class="well bs-component ">
+            {% bootstrap_form results_matura_form %}
+        </div>
+        <h3>Predmeti:</h3>
+        {{ course_form_set.management_form }}
+        {% for form in course_form_set.forms %}
+        <div class="well bs-component formset">
+            <span class='remove_course glyphicon glyphicon-remove'></span>
+            {% bootstrap_form form %}
+        </div>
+        {% endfor %}
+        <input type="button" class="btn btn-primary" value="Dodaj predmet" id="add_more">
+        <br>
+        <br>
+        <input type="submit" value="Shrani" class="btn btn-success"/>
+        <a href="/application/{{student.pk}}/details" class="btn btn-default">Prekliči</a>
+    </form>
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.js"></script>
+    <script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+    <script>
+
+    function validateForm(selector){
+        $(".error").remove();
+        $(selector+" input").each(function () {
+            if($(this).prop("type")!="checkbox"){
+                if ($(this).val() == "") {
+                    $(this).closest(".form-group").append("<span id='" + $(this).attr("id") + "_error' class='error'>To polje je obvezno</span>");
+                    $(this).keyup(function () {
+                        $("#" + $(this).attr("id") + "_error").remove();
+                        $(this).unbind("keyup");
+                    });
+                }
+            }
+        });
+        $(selector+" select").each(function () {
+            if ($(this).val() == "") {
+                $(this).after("<span id='" + $(this).attr("id") + "_error' class='error'>To polje je obvezno</span>");
+                $(this).change(function () {
+                    $("#" + $(this).attr("id") + "_error").remove();
+                    $(this).unbind("change");
+                });
+            }
+        });
+    }
+
+    function cloneMore(selector, type) {
+        var total = $('#id_' + type + '-TOTAL_FORMS').val();
+        if(parseInt(total) > 0) {
+            var newElement = $(selector).clone(true);
+            newElement.find(':input').each(function () {
+                var name = $(this).attr('name').replace('-' + (total - 1) + '-', '-' + total + '-');
+                var id = 'id_' + name;
+                $(this).attr({'name': name, 'id': id}).val('').removeAttr('checked');
+            });
+            newElement.find('label').each(function () {
+                var newFor = $(this).attr('for').replace('-' + (total - 1) + '-', '-' + total + '-');
+                $(this).attr('for', newFor);
+            });
+            $(selector).after(newElement);
+            newElement.find(".form-group").eq(3).find("input").first().val("True");
+            newElement.find(".form-group").eq(3).find("input").first().prop("checked", "checked");
+            newElement.find(".form-group").eq(3).find("input").eq(1).val("False");
+        }else{
+            $(selector).show();
+        }
+        total++;
+        $('#id_' + type + '-TOTAL_FORMS').val(total);
+    }
+
+    function removeCourse(selector, type){
+        var total = $('#id_' + type + '-TOTAL_FORMS').val();
+        total--;
+        $('#id_' + type + '-TOTAL_FORMS').val(total);
+        if(parseInt(total) > 0){
+            var removedId = $(selector).find("input").first().attr('name').charAt(5);
+            $(selector).remove();
+
+            $("div.formset").each(function () {
+                var formNumber = $(this).find("input").first().attr('name').charAt(5);
+                if(formNumber && parseInt(formNumber)>parseInt(removedId)){
+                    $(this).find(':input').each(function () {
+                        var name = $(this).attr('name').replace('-' + formNumber + '-', '-' + (parseInt(formNumber) - 1) + '-');
+                        var id = 'id_' + name;
+                        $(this).attr({'name': name, 'id': id});
+                    });
+                    $(this).find('label').each(function () {
+                        var newFor = $(this).attr('for').replace('-' + formNumber + '-', '-' +  (parseInt(formNumber)-1) + '-');
+                        $(this).attr('for', newFor);
+                    });
+                }
+            });
+        }else{
+            $(selector).hide();
+        }
+    }
+
+    $(document).ready(function () {
+        $("#id_results-matura-form-general_success_3").on("change", function () {
+            validationInRange("id_results-matura-form-general_success_3",1, 5);
+        });
+
+        $("#id_results-matura-form-general_success_4").on("change", function () {
+            validationInRange("id_results-matura-form-general_success_4",1, 5);
+        });
+
+        $("#id_results-matura-form-matura").on("change", function () {
+            validationInRange("id_results-matura-form-matura",0, 34);
+        });
+
+        function validationInRange(id, min, max){
+            if ($("#"+id).val() < min || $("#"+id).val() > max) {
+                $("#"+id).after("<span id='" + id + "_error' class='error'>Število mora biti med "+min+" in "+max+"!</span>");
+                $("#"+id).keyup(function () {
+                    $("#" + id + "_error").remove();
+                    $("#"+id).unbind("keyup");
+                });
+            }
+        }
+
+        $('#add_more').click(function() {
+            cloneMore('div.formset:last', 'form');
+        });
+
+         $(document).on("click", '.remove_course', function() {
+            removeCourse($(this).closest("div.formset"), 'form');
+        });
+
+        $("#form").submit(function () {
+            var total = $('#id_form-TOTAL_FORMS').val();
+            if(parseInt(total)>0){
+                validateForm("");
+
+            }else{
+                 validateForm("#splosno-o-maturi");
+            }
+            if($(".error").size() == 0)
+                return true;
+            return false;
+        });
+
+        {% if not has_courses %}
+            $('#id_form-TOTAL_FORMS').val(0);
+            $("div.formset").hide();
+        {% endif %}
+    });
+
+
+    </script>
+{% endblock %}

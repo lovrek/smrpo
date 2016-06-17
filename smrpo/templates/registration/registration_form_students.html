@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% load bootstrap3 %}
+
+{% block title %} Registracija - Kandidat {% endblock %}
+
+{% block body %}
+
+<div class="row">
+
+
+    {% if not user.is_authenticated %}
+        <div class="col-md-6 col-md-offset-3">
+            <h3 class="text-center">Registracija</h3>
+
+            <form action="{% url 'register_student' %}" method="post">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">
+                            Registriraj se
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </form>
+        </div>
+    {% else %}
+        <h3 class="text-center">Odjavite se pred registracijo novega računa.</h3>
+    {% endif %}
+
+</div>
+
+{% endblock %}

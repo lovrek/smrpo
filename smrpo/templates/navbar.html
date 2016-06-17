@@ -1,0 +1,104 @@
+{% load login_tags %}
+
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">
+                <p>VPIS NA FAKULTETE</p>
+            </a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+
+                <!-- put elements in appropriate if statements for different user profiles -->
+                {% if user|is_student %}
+                    <li><a href="#">Student element</a></li>
+                {% elif user|is_faculty_employee %}
+                    <li><a href="/application">Prijave</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">Študijski program <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'study_programs:index' %}">Seznam študijskih programov</a></li>
+                            <li><a href="{% url 'study_programs:add' %}">Dodaj študjski program</a></li>
+                        </ul>
+                    </li>
+                {% elif user|is_referent %}
+                    <li><a href="/application">Prijave</a></li>
+                {% endif %}
+
+                {% if user|is_referent %}
+                <!-- dropdown for Sifranti -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">Šifranti <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'informations:sifrant' entity_type='Country' %}">Država</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Nationality' %}">Državljanstvo</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Region' %}">Občina</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Post' %}">Pošta</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='HighSchool' %}">Srednja šola</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Profession' %}">Poklic</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Course' %}">Predmet</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='Faculty' %}">Fakulteta</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='University' %}">Univerza</a></li>
+                        <li><a href="{% url 'informations:sifrant' entity_type='FinishedEducation' %}">Končana
+                            izobrazba</a></li>
+                    </ul>
+                </li>
+                <!-- dropdown for study program -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                       aria-expanded="false">Študijski program <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'study_programs:index' %}">Seznam študijskih programov</a></li>
+                        <li><a href="{% url 'study_programs:add' %}">Dodaj študjski program</a></li>
+                    </ul>
+                </li>
+                <li><a href="{% url 'informations:uploadFile' %}">Uvozi datoteko</a></li>
+                {% endif %}
+            </ul>
+
+            <!-- <form class="navbar-form navbar-left" role="search">
+              <div class="form-group">
+                <input type="text" class="form-control" placeholder="Search">
+              </div>
+              <button type="submit" class="btn btn-default">Submit</button>
+            </form>  -->
+
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if user.is_authenticated %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                           aria-expanded="false">
+                            <span class="glyphicon glyphicon-user"
+                                  id="user-glyph"></span> {{ user.first_name }} {{ user.last_name }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{% url 'password_change' %}">Spremeni geslo</a></li>
+                            <li><a href="{% url 'django.contrib.auth.views.logout' %}?next=/">Odjava</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'register_student' %}">Registracija</a></li>
+                    <li><a href="{% url 'login' %}">Prijava</a></li>
+                {% endif %}
+            </ul>
+
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>

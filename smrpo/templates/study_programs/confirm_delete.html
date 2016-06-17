@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %} Potrdi izbris študijskega programa {% endblock %}
+
+{% block body %}
+<form action="" method="post">
+    {% csrf_token %}
+    <p>Ali ste prepričani, da želite odstraniti študijski program: </p>
+    <p>{{ something.name }}({{ something.code }}) </p>
+    <input type="submit" value="Izbrši"/>
+    <a href="{% url 'study_programs:index' %}"> nazaj </a>
+</form>
+
+{% endblock %}
+
+{% block javascript %}
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% load filters %}
+{% load staticfiles %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css">
+<link rel="stylesheet" type="text/css" href="{% static 'css/ajax-bootstrap-select.css' %}">
+<link rel="stylesheet" type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+<style type=text/css>
+    #pdf {
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block title %} Prijave za vpis {% endblock %}
+
+{% block body %}
+{% load bootstrap3 %}
+
+{% if not applications.0.is_sent and not closed %}
+<a href="/application/add" class="btn btn-primary">Uredi prijavo</a>
+{% endif %}
+<a href="{% url 'applications:application_PDF' user.id %}" class="btn btn-success">Izvozi PDF</a>
+{% if not closed %}
+<a href="/application/delete" class="btn btn-danger">Izbriši prijavo</a>
+{% if not applications.0.is_sent %}
+<a href="/application/send" class="btn btn-danger" style="float:right;">Pošlji</a>
+{% endif %}
+{% endif %}
+
+<embed id="pdf" height="1200px" width="100%"  name="plugin" src="{% url 'applications:display_PDF' %}"  type="application/pdf">
+
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.js"></script>
+<script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+<script>
+
+</script>
+{% endblock %}

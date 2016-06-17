@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% load filters %}
+{% load study_programs_tags %}
+{% load staticfiles %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/ajax-bootstrap-select.css' %}">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/css/bootstrap3/bootstrap-switch.min.css">
+    <style type=text/css>
+        #pdf {
+            margin-top: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{{ student.user.first_name }} {{ student.user.last_name }}
+    {{ student.second_last_name|default_if_none:"" }} {% endblock %}
+
+{% block body %}
+    {% load bootstrap3 %}
+
+    {% if not student.second_last_name %}
+        <h1>Pregled kandidata {{ student.user.first_name }} {{ student.user.last_name }} </h1>
+    {% else %}
+        <h1>Pregled
+            kandidata {{ student.user.first_name }} {{ student.user.last_name }} {{ student.second_last_name }}</h1>
+    {% endif %}
+    <br/>
+    <h3>Podatki o izobrazbi:</h3>
+    {% if matura %}
+        <b>Srednja šola: </b> {{ student.high_school.name }} <br/>
+        <b>Poklic: </b> {{ student.profession.name }} <br/>
+        <br>
+        <h3>Podatki o uspehu kandidatu:</h3>
+        <br/>
+        <b>Tip mature: </b>
+        {% if not matura.student_type %}
+            Poklicna matura
+        {% else %}
+            Splošna matura
+        {% endif %}
+        <br/>
+        <b>Točke na maturi: </b> {{ matura.matura }} <br/>
+        <b>Splošni uspeh v 3. letniku:</b> {{ matura.general_success_3 }} <br/>
+        <b>Splošni uspeh v 4. letniku:</b> {{ matura.general_success_4 }} <br/>
+        <br/>
+
+        <br/>
+        <div>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>Predmet</th>
+                    <th>Šifra</th>
+                    <th>Ocena</th>
+                    <th>Opravil</th>
+                    <th>Ocena (3. letnik)</th>
+                    <th>Ocena (4. letnik)</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for course in courses_on_matura %}
+                    <tr>
+                        <td>{{ course.course.name }}</td>
+                        <td>{{ course.course.sifra }}</td>
+                        <td>{{ course.result_on_matura }}</td>
+                        {% if course.passed %}
+                            <td>Da</td>
+                        {% else %}
+                            Ne
+                        {% endif %}
+                        <td>{{ course.success_course_3 }}</td>
+                        <td>{{ course.success_course_4 }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <br/>
+        <h3>Podatki o prijavi</h3>
+        {% for application in applications %}
+            {% if application.priority == 1 %}
+                <b>Prva želja:</b> {{ application.study_program.name }} {% if application.irregular %} (izredni)
+            {% else %}
+                (redni){% endif %} <br/>
+            {% elif application.priority == 2 %}
+                <b>Druga želja:</b> {{ application.study_program.name }} {% if application.irregular %} (izredni)
+            {% else %}
+                (redni){% endif %}  <br/>
+            {% elif application.priority == 3 %}
+                <b>Tretja želja:</b> {{ application.study_program.name }} {% if application.irregular %} (izredni)
+            {% else %}
+                (redni){% endif %} <br/>
+            {% endif %}
+        {% endfor %}
+
+        <br/>
+        <h3>Izpoljevanje pogojev in izračun točk</h3>
+        {% for application in applications %}
+            {% if application.points != 0 %}
+                <span class="glyphicon glyphicon-ok"></span>
+                <span style="color:green">{{ application.study_program.name }}</span><br/>
+                <br/>
+
+                {% if application.study_program.type_requirements.is_P0 %}
+                    {% if not matura.student_type %}
+                        Točke za <b>SPLOŠNI USPEH PRI POKLICNI MATURI:</b> (utež = {{ application.study_program.profession_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }}) <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.profession_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                    {% else %}
+                        Točke za <b>SPLOŠNI USPEH PRI SPLOŠNI MATURI:</b> (utež = {{ application.study_program.general_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }}) <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.general_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                    {% endif %}
+
+
+                {% elif application.study_program.type_requirements.is_P1 %}
+                    {% if not matura.student_type %}
+                        Točke za <b>SPLOŠNI USPEH PRI POKLICNI MATURI:</b> (utež = {{ application.study_program.profession_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }}) <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.profession_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                        {% if application.study_program.priority_course != None %}
+                            {% for course in courses_on_matura %}
+                                 {% if course.course.sifra == application.study_program.priority_course.sifra %}
+                                    Točke za <b>{{ application.study_program.priority_course.name }}:</b> (utež = {{ application.study_program.profession_matura.w_priority_course_matura }}) {{ application.points_priority_course }} (normalizirano = {{ course.points_result_on_matura }})<br />
+                                    Točke za <b>OCENA IZ {{ application.study_program.priority_course.name|cut:'(OSNOVNA RAVEN) (NA MATURI)' }} V 3. LETNIKU: </b> (utež = {{ application.study_program.profession_matura.w_priority_course_3_4|divide_with_two }}) {{ course.success_course_3 }} (normalizirano = {{ course.points_success_course_3 }}) <br />
+                                    Točke za <b>OCENA IZ {{ application.study_program.priority_course.name|cut:'(OSNOVNA RAVEN) (NA MATURI)' }} V 4. LETNIKU: </b> (utež = {{ application.study_program.profession_matura.w_priority_course_3_4|divide_with_two }}) {{ course.success_course_4 }} (normalizirano = {{ course.points_success_course_4 }}) <br />
+                                {% endif %}
+                            {% endfor %}
+                        {% elif application.study_program.profession_matura.w_matura_course != None %}
+                            {% for course in courses_on_matura %}
+                                {% if course.type_course_profession ==  5 %}
+                                    Točke za <b>MATURITETNI PREDMET {{ course.course.name|cut:'(NA MATURI)' }}:</b>(utež = {{ application.study_program.profession_matura.w_matura_course }}) {{ application.points_priority_course }} (normalizirano = {{ course.points_result_on_matura }})<br />
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        Točke za <b>SPLOŠNI USPEH PRI SPLOŠNI MATURI:</b> (utež = {{ application.study_program.general_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }})  <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.general_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                         {% if application.study_program.priority_course != None %}
+                             {% for course in courses_on_matura %}
+                                 {% if course.course.sifra == application.study_program.priority_course.sifra %}
+                                    Točke za <b>{{ application.study_program.priority_course.name }}:</b> (utež = {{ application.study_program.general_matura.w_priority_course_matura }}) {{ application.points_priority_course }} (normalizirano = {{ course.points_result_on_matura }})<br/>
+                                    Točke za <b>OCENA IZ {{ application.study_program.priority_course.name|cut:'(OSNOVNA RAVEN) (NA MATURI)' }} V 3. LETNIKU: </b> (utež = {{ application.study_program.general_matura.w_priority_course_3_4|divide_with_two }}) {{ course.success_course_3 }} (normalizirano = {{ course.points_success_course_3 }}) <br/>
+                                    Točke za <b>OCENA IZ {{ application.study_program.priority_course.name|cut:'(OSNOVNA RAVEN) (NA MATURI)' }} V 4. LETNIKU: </b> (utež = {{ application.study_program.general_matura.w_priority_course_3_4|divide_with_two }}) {{ course.success_course_4 }} (normalizirano = {{ course.points_success_course_4 }}) <br/>
+                                {% endif %}
+                             {% endfor %}
+                         {% endif %}
+                    {% endif %}
+
+
+                {% elif application.study_program.type_requirements.is_P3 %}
+
+                    {% if not matura.student_type %}
+                        Točke za <b>SPLOŠNI USPEH PRI POKLICNI MATURI:</b> (utež = {{ application.study_program.profession_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }}) <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.profession_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                        {% for course in courses_on_matura %}
+                            {% if course.type_course_profession ==  5 %}
+                                Točke za <b>MATURITETNI PREDMET {{ course.course.name|cut:'(NA MATURI)' }}:</b>(utež = {{ application.study_program.profession_matura.w_matura_course }}) {{ application.points_priority_course }} (normalizirano = {{ course.points_result_on_matura }})<br />
+                            {% endif %}
+
+                        {% endfor %}
+                    {% else %}
+                        Točke za <b>SPLOŠNI USPEH PRI SPLOŠNI MATURI:</b> (utež = {{ application.study_program.general_matura.w_matura }}) {{ application.points_matura }} (normalizirano = {{ matura.points_matura }})  <br/>
+                        Točke za <b>SPLOŠNI USPEH V 3. in 4. LETNIKU:</b> (utež = {{ application.study_program.general_matura.w_general_success }}) {{ application.points_general_success }} (normalizirano = {{ matura.points_general_success }}) <br/>
+                    {% endif %}
+                {% endif %}
+                Točke skupaj: {{ application.points }}
+
+            {% else %}
+                <span class="glyphicon glyphicon-remove"></span>
+                <span style="color:red">{{ application.study_program.name }}</span><br/>
+            {% endif %}
+
+            <br/>
+            <br/>
+        {% endfor %}
+
+    <a href="/application/{{student.pk}}/add_matura_info" class="btn btn-primary">Uredi</a>
+    {% else %}
+        <a href="/application/{{student.pk}}/add_matura_info" class="btn btn-primary">Dodaj</a>
+    {% endif %}
+    <a href="{% url 'applications:detailsPDF' student.pk %}" class="btn btn-default">Ustvari PDF</a>
+
+
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/js/bootstrap-select.js"></script>
+    <script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'js/ajax-bootstrap-select.min.js' %}"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.2/js/bootstrap-switch.min.js"></script>
+    <script>
+
+    </script>
+{% endblock %}

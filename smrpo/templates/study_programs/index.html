@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css"
+      href="//cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
+<link rel="stylesheet" type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css">
+
+<style>
+    .action_icon {
+        cursor: pointer;
+        margin: 0 8px;
+        color: #286090;
+    }
+
+    #table_wrapper > .row:first-child {
+        display: none !important;;
+    }
+
+    tr.strikeout td:before {
+        content: " ";
+        position: absolute;
+        left: 0;
+        border-bottom: 1px solid #999;
+        width: 92%;
+        margin-top: 10px;
+        margin-left: 30px;
+    }
+
+    tr.strikeout {
+        color: rgba(40, 96, 144, 0.59);
+    }
+
+    .action_icon.disabled {
+        cursor: default;
+        color: rgba(40, 96, 144, 0.59);
+    }
+
+    #column-select {
+        margin-left: 25px;
+        cursor: pointer;
+    }
+
+    .dropdown-menu li{
+        cursor: pointer;
+    }
+
+    .dropdown-menu li.selected{
+        background: #e3e3e3;
+    }
+</style>
+{% endblock %}
+
+{% block title %} Študijski programi {% endblock %}
+
+{% block left_column %}
+{{ block.super }}
+
+<form id="filter" class="well bs-component">
+    <h4>Filter:</h4>
+    <div class="form-group">
+        <label class="control-label" for="name">Ime</label>
+        <input class="form-control" id="name" name="name" type="text" placeholder="Ime">
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="code">Šifra</label>
+        <input class="form-control" id="code" name="code" type="text" placeholder="Šifra">
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="faculty__name">Ime fakultete</label>
+        <input class="form-control" id="faculty__name" name="faculty__name" type="text" placeholder="Ime fakultete">
+    </div>
+</form>
+
+{% endblock %}
+
+{% block body %}
+
+<a href="{% url 'study_programs:add' %}" id="add_button" class="btn btn-primary">Dodaj</a>
+    <div id="study_programs_table">
+<table id="table" class="table table-striped table-bordered">
+    <thead>
+    <tr>
+        <th>
+            <div id="column-select-dropdown" class="dropdown">
+                <span id="column-select" class="glyphicon glyphicon-th-list" type="button"
+                      id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="true">
+                </span>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    <li class="selected" data-field-name="name"><a>Ime</a></li>
+                    <li class="selected" data-field-name="code"><a>Šifra</a></li>
+                    <li class="selected" data-field-name="faculty__name"><a>Ime fakultete</a></li>
+                    <li class="" data-field-name="faculty__code"><a>Šifra fakultete</a></li>
+                    <li class="" data-field-name="faculty__university__name"><a>Ime univerze</a></li>
+                    <li class="" data-field-name="faculty__university__code"><a>Šifra univerze</a></li>
+                    <li class="" data-field-name="regular_slots__enrolment_slots_EU"><a>Število vpisnih mest - EU (redni)</a></li>
+                    <li class="" data-field-name="regular_slots__enrolment_slots_other"><a>Število vpisnih mest - ostali (redni)</a></li>
+                    <li class="" data-field-name="irregular_slots__enrolment_slots_EU"><a>Število vpisnih mest - EU (izredni)</a></li>
+                    <li class="" data-field-name="irregular_slots__enrolment_slots_other"><a>Število vpisnih mest - ostali (izredni)</a></li>
+                    <li class="" data-field-name="deleted"><a>Izbrisan</a></li>
+                </ul>
+            </div>
+        </th>
+        <th>Ime</th>
+        <th>Šifra</th>
+        <th>Ime fakultete</th>
+        <th>Šifra fakultete</th>
+        <th>Ime univerze</th>
+        <th>Šifra univerze</th>
+        <th>Število vpisnih mest - EU (redni)</th>
+        <th>Število vpisnih mest - ostali (redni)</th>
+        <th>Število vpisnih mest - EU (izredni)</th>
+        <th>Število vpisnih mest - ostali (izredni)</th>
+        <th>Izbrisan</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+    </div>
+
+<div id="confirm" class="modal fade" role="dialog" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                Ali resnično želiti izbrisati?
+            </div>
+            <div class="modal-footer">
+                <button type="button" data-dismiss="modal" class="btn btn-primary" id="delete">
+                    Izbriši
+                </button>
+                <button type="button" data-dismiss="modal" class="btn">Prekliči</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <br />
+{#    <button onclick="javascript:demoFromHTML()">PDF</button>#}
+    <a href="{% url 'study_programs:study_programs_PDF' %}" class="btn btn-default"> Ustvari PDF </a>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript" charset="utf8"
+        src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.js"></script>
+<script type="text/javascript" charset="utf8"
+        src="//cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" src="{% static 'js/jspdf.min.js/' %}"></script>
+
+<script type="text/javascript">
+
+    $(function () {
+        $.ajaxSetup({
+            headers: {"X-CSRFToken": "{{csrf_token}}"}
+        });
+    });
+
+    var table = $('#table').DataTable({
+        ajax: {
+            url: '/information/entity/StudyProgram',
+            dataSrc: ''
+        }, columns: [
+            {data: null},
+            {data: "name"},
+            {data: "code"},
+            {data: "faculty__name"},
+            {data: "faculty__code"},
+            {data: "faculty__university__name"},
+            {data: "faculty__university__sifra"},
+            {data: "regular_slots__enrolment_slots_EU"},
+            {data: "regular_slots__enrolment_slots_other"},
+            {data: "irregular_slots__enrolment_slots_EU"},
+            {data: "irregular_slots__enrolment_slots_other"},
+            {data: "deleted"},
+        ],
+        rowId: 'id',
+        order: [[1, "asc"]],
+        aoColumnDefs: [
+            {
+                "targets": 0,
+                "data": null,
+                "defaultContent": '<span class="action_icon edit glyphicon glyphicon-pencil" ></span><span class="action_icon delete glyphicon glyphicon-remove"></span><span class="action_icon constraints glyphicon glyphicon-cog" ></span>',
+                "orderable": false,
+                "searchable": false,
+                "width": "100px"
+            },
+            {
+                "targets": [4,5,6,7,8,9,10,11],
+                "visible": false
+            }
+        ],
+        "createdRow": function (row, data, index) {
+            if (data.deleted) {
+                $('td span.action_icon', row).addClass('disabled');
+                $(row).addClass("strikeout");
+            }
+        },
+        language: {
+            processing: "Traitement en cours...",
+            search: "Išči:",
+            lengthMenu: "",
+            info: "Število vrstic: _TOTAL_",
+            infoEmpty: "Število vrstic: 0",
+            infoFiltered: "",
+            infoPostFix: "",
+            loadingRecords: "Iskanje rezultatov...",
+            zeroRecords: "Ni podatkov",
+            emptyTable: "Ni podatkov",
+            paginate: {
+                first: "Prva",
+                previous: "Prejšnja",
+                next: "Naslednja",
+                last: "Zadnja"
+            }
+        }
+    });
+
+    $('#table tbody').on('click', '.edit', function () {
+        var studyProgram = table.row($(this).parents('tr')).data();
+        window.location.href = "/study-programs/edit/" + studyProgram.id;
+    });
+
+    $('#table tbody').on( 'click', '.constraints', function () {
+        var studyProgram = table.row($(this).parents('tr')).data();
+        window.location.href = "/study-programs/" + studyProgram.id + "/requirements";
+    });
+
+    $('#table tbody').on('click', '.delete', function () {
+        var studyProgram = table.row($(this).parents('tr')).data();
+        if (!studyProgram.deleted) {
+            var entityName = $(this).parents('tr').find('td').eq(1).text();
+            $('#confirm').modal({backdrop: 'static', keyboard: false})
+                    .one('click', '#delete', function (e) {
+                        $.ajax({
+                            type: "DELETE",
+                            url: "/information/entity/StudyProgram/" + studyProgram.id,
+                        }).done(function () {
+                            var row = $("tr#" + studyProgram.id);
+                            $('td span.action_icon', row).addClass('disabled');
+                            $(row).addClass("strikeout");
+                        });
+                    });
+        }
+    });
+
+    $("#filter").on('keyup', 'input', function (event) {
+        var query = $("form#filter :input").filter(function (index, element) {
+            return $(element).val() != "";
+        }).serialize();
+        $.ajax({
+            type: "GET",
+            url: "/study-programs/study_programs?" + query
+        }).done(function (data) {
+            table.clear();
+            table.rows.add(data);
+            table.draw();
+        });
+    });
+
+    $('#column-select').on('click', function () {
+        $('#column-select-dropdown').trigger('click.bs.dropdown');
+    });
+
+    $("#column-select-dropdown .dropdown-menu").on('click', 'li', function (e) {
+        e.stopPropagation();
+        $(this).toggleClass("selected");
+        var fieldName = $(this).attr("data-field-name");
+        var fieldTitle = $(this).children().first().html();
+        if($(this).hasClass("selected")){
+            var filterInputElement =
+            '<div class="form-group">'+
+                '<label class="control-label" for="'+fieldName+'">'+fieldTitle+'</label>'+
+                '<input class="form-control" id="'+fieldName+'" name="'+fieldName+'" type="text" placeholder="'+fieldTitle+'">'+
+            '</div>';
+//            if($('#filter').children().length > 0 && $(this).index() > 0){
+//                $('#filter').children(':eq('+($(this).index()-1)+')').after(filterInputElement);
+//            }else if($('#filter').children().length < $(this).index() -1){
+//            }else{
+//                $('#filter').prepend(filterInputElement);
+//            }
+            $('#filter').append(filterInputElement);
+        } else {
+            $("#filter input#"+ fieldName).closest(".form-group").remove();
+        }
+        var column = table.column($(this).index()+1);
+        column.visible( ! column.visible() );
+    });
+
+function demoFromHTML() {
+            var pdf = new jsPDF('p', 'pt', 'letter');
+            // source can be HTML-formatted string, or a reference
+            // to an actual DOM element from which the text will be scraped.
+            source = $('#study_programs_table')[0];
+
+            // we support special element handlers. Register them with jQuery-style
+            // ID selector for either ID or node name. ("#iAmID", "div", "span" etc.)
+            // There is no support for any other type of selectors
+            // (class, of compound) at this time.
+            specialElementHandlers = {
+                // element with id of "bypass" - jQuery style selector
+                '#bypassme': function(element, renderer) {
+                    // true = "handled elsewhere, bypass text extraction"
+                    return true
+                }
+            };
+            margins = {
+                top: 80,
+                bottom: 60,
+                left: 40,
+                width: 522
+            };
+            // all coords and widths are in jsPDF instance's declared units
+            // 'inches' in this case
+            pdf.fromHTML(
+                    source, // HTML string or DOM elem ref.
+                    margins.left, // x coord
+                    margins.top, {// y coord
+                        'width': margins.width, // max width of content on PDF
+                        'elementHandlers': specialElementHandlers
+                    },
+            function(dispose) {
+                // dispose: object with X, Y of the last line add to the PDF
+                //          this allow the insertion of new lines after html
+                pdf.save('Test.pdf');
+            }
+            , margins);
+        }
+
+</script>
+{% endblock %}

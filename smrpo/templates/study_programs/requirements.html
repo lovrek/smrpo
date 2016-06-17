@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% load study_programs_tags %}
+
+{% block title %} Pogoji {% endblock %}
+
+{% block body %}
+    <h1>{{ study_program.name }}</h1>
+
+    <h3>Podatki o programu:</h3>
+    UNIVERZA: {{ study_program.faculty.university.name }} <br/>
+    VISOKOŠOLSKI ZAVOD: {{ study_program.faculty.name }}<br/>
+    ŠTUDIJSKI PROGRAM: {{ study_program.name }}<br/>
+    ŠIFRA PROGRAMA: {{ study_program.code }}<br/>
+    TIP VPISNEGA POGOJA: {{ study_program.type_requirements.code }} - {{ study_program.type_requirements.name }}
+
+    <h3>Vpisni pogoji:</h3>
+    {% if study_program.type_requirements.code == 'P1' %}
+        <p>a) Kdor je opravil splosno maturo.</p>
+        <p>b) Kdor je opravil poklicno maturo v kateremkoli srednješolskem programu {{ profession }} in izpit iz enega
+            {% if courses != "" %}
+                od maturitetnih predmetov {{ courses }}
+            {% else %}
+                poljubnega maturitetnega predmeta.
+            {% endif %}
+            Izbrani predmet ne se sme biti predmet, ki ga je kandidat že opravil pri poklicni maturi.</p>
+    {% elif study_program.type_requirements.code == '00' %}
+        <p>Vpiše se lahko, kdor je opravil zaključni izpit v kateremkoli štiriletnem srednješolskem programu, poklicno
+            maturo ali splošno maturo.</p>
+    {% elif study_program.type_requirements.code == 'P2' %}
+        <p>a) Kdor je opravil splošno maturo.</p>
+        <p>b) Kdor je opravil poklico maturo v kateremkoli srednješolskem programu in izpit iz maturitetnega predemta:
+            {% for course in study_program.profession_matura.matura_courses.all %}{% if forloop.last %}
+                {{ course.name }}. {% else %}{{ course.name }}, {% endif %}{% endfor %}
+            Če je kandidat ta predmet opravil že pri poklicni maturi pa izpit iz kateregakoli maturitetnega predmeta.
+            Izbrani predmet ne sme biti predmet,
+            ki ga je kandidat že opravil pri poklicni maturi.</p>
+    {% elif study_program.type_requirements.code == 'P3' %}
+        <p>a) Kdor je opravil splošno maturo.</p>
+        <p>b) Kdor je opravil poklicno maturo v srednješolskem
+            programu {{ study_program.profession_matura.profession.name }} in izpit iz maturitetnega predmeta
+            {% for course in study_program.profession_matura.matura_courses.all %}{% if forloop.last %}
+                {{ course.name }}. {% else %}{{ course.name }}, {% endif %}{% endfor %} Če je kandidat navedeni predmet
+            že opravil pri poklicni maturi, pa izpit iz kateregakoli
+            maturitetnega predmeta. Izbrani predmet ne sme biti predmet, ki ga je kandidat že opravil pri poklicni
+            maturi.</p>
+    {% endif %}
+    <br/>
+    <h3>Splošna matura:</h3>
+    <ul>
+        <li>Uspeh na maturi: {{ study_program.general_matura.w_matura|to_percent }}%</li>
+        <li>Splošni uspeh v 3. in 4. letniku: {{ study_program.general_matura.w_general_success|to_percent }}%</li>
+        {% if study_program.general_matura.w_priority_course_3_4 > 0 %}
+            <li>Splošni uspeh v 3. in 4. letniku pri
+                predmetu {{ priority_course }}: {{ study_program.general_matura.w_priority_course_3_4|to_percent }}%
+            </li>
+        {% endif %}
+        {% if study_program.general_matura.w_priority_course_matura > 0 %}
+            <li>Splošni uspeh na maturi iz
+                predmeta {{ priority_course }}: {{ study_program.general_matura.w_priority_course_matura|to_percent }}%
+            </li>
+        {% endif %}
+    </ul>
+
+    <br/>
+
+    <h3>Poklicna matura:</h3>
+    <ul>
+        <li>Uspeh na maturi: {{ study_program.profession_matura.w_matura|to_percent }}%</li>
+        <li>Splošni uspeh v 3. in 4. letniku: {{ study_program.profession_matura.w_general_success|to_percent }}%</li>
+        {% if study_program.profession_matura.w_matura_course > 0 %}
+            <li>Maturitetni predmet: {{ study_program.profession_matura.w_matura_course|to_percent }}%</li>
+        {% endif %}
+        {% if study_program.profession_matura.w_priority_course_3_4 > 0 %}
+            <li>Splošni uspeh v 3. in 4. letniku pri
+                predmetu {{ priority_course }}: {{ study_program.profession_matura.w_priority_course_3_4|to_percent }}%
+            </li>
+        {% endif %}
+        {% if study_program.profession_matura.w_priority_course_matura > 0 %}
+            <li>Splošni uspeh na maturi iz
+                predmeta {{ priority_course }}: {{ study_program.profession_matura.w_priority_course_matura|to_percent }}%
+            </li>
+        {% endif %}
+    </ul>
+
+    <br/>
+
+    <h3>Vpisna mesta:</h3>
+    <h5>Državljani Slovenije in EU</h5>
+    <ul>
+        {% if study_program.regular_slots == None and study_program.irregular_slots == None %}
+            <li>Ni razpisanih vpisnih mest.</li>
+        {% elif study_program.regular_slots.enrolment_slots_EU == 0 and study_program.irregular_slots.enrolment_slots_EU == 0 %}
+            <li>Ni razpisanih vpisnih mest.</li>
+        {% else %}
+            {% if study_program.regular_slots.enrolment_slots_EU != 0 %}
+                <li>Redni študij: {{ study_program.regular_slots.enrolment_slots_EU }} mest</li>
+            {% else %}
+                <li>Ni razpisanih vpisnih mest.</li>
+            {% endif %}
+            {% if study_program.irregular_slots.enrolment_slots_EU != 0 %}
+                <li>Izredni študij: {{ study_program.irregular_slots.enrolment_slots_EU }} mest</li>
+            {% else %}
+                <li>Ni razpisanih vpisnih mest.</li>
+            {% endif %}
+        {% endif %}
+    </ul>
+    <br/>
+    <h5>Slovenci brez državljanstva in ostali</h5>
+    <ul>
+        {% if study_program.regular_slots == None and study_program.irregular_slots == None %}
+            <li>Ni razpisanih vpisnih mest.</li>
+        {% elif study_program.irregular_slots.enrolment_slots_other == 0 and study_program.regular_slots.enrolment_slots_other == 0 %}
+            <li>Ni razpisanih vpisnih mest.</li>
+        {% else %}
+            {% if study_program.regular_slots != None and study_program.regular_slots.enrolment_slots_other > 0 %}
+                <li>Redni študij: {{ study_program.regular_slots.enrolment_slots_other }} mest</li>
+            {% else %}
+                <li>Ni razpisanih vpisnih mest.</li>
+            {% endif %}
+            {% if study_program.irregular_slots != None and study_program.irregular_slots.enrolment_slots_other > 0 %}
+                <li>Izredni študij: {{ study_program.irregular_slots.enrolment_slots_other }} mest</li>
+            {% else %}
+                <li>Ni razpisanih vpisnih mest.</li>
+            {% endif %}
+        {% endif %}
+    </ul>
+
+    <br/>
+    <a href="{% url 'study_programs:edit_requirements' study_program.id %}" class="btn btn-primary"> Uredi </a>
+    <a href="{% url 'study_programs:requirementsPDF' study_program.id %}" class="btn btn-primary"> Ustvari PDF </a>
+    <a href="{% url 'study_programs:index' %}" class="btn btn-default"> Nazaj </a>
+{% endblock %}

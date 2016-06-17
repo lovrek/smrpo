@@ -1,0 +1,46 @@
+html, body {
+    height: 100%;
+}
+
+.page-wrap {
+    padding-top: 80px;
+    padding-bottom: 40px;
+    min-height: 100%;
+    margin: 0 auto;
+    width: 100%;
+    /* equal to footer height */
+    margin-bottom: -100px;
+}
+
+.page-wrap:after {
+    content: "";
+    display: block;
+}
+
+.site-footer, .page-wrap:after {
+    height: 100px;
+}
+
+.site-footer {
+    background: #cccccc;
+    text-align: center;
+    font-size: 14px;
+    color: #4d4d4d;
+    padding-top: 25px;
+}
+
+#user-glyph {
+    margin-right: 5px;
+}
+
+.padding-top-small {
+    padding-top: 10px;
+}
+
+.padding-top-medium {
+    padding-top: 20px;
+}
+
+.padding-top-big {
+    padding-top: 30px;
+}

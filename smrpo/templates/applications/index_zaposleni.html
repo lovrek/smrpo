@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% load login_tags %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css"
+          href="//cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.6.3/css/bootstrap-select.css">
+
+    <style>
+        .action_icon {
+            cursor: pointer;
+            margin: 0 8px;
+            color: #286090;
+        }
+
+        #table_wrapper > .row:first-child {
+            display: none !important;;
+        }
+
+        tr.strikeout td:before {
+            content: " ";
+            position: absolute;
+            left: 0;
+            border-bottom: 1px solid #999;
+            width: 92%;
+            margin-top: 10px;
+            margin-left: 30px;
+        }
+
+        tr.strikeout {
+            color: rgba(40, 96, 144, 0.59);
+        }
+
+        tr {
+            cursor: pointer;
+        }
+
+        .action_icon.disabled {
+            cursor: default;
+            color: rgba(40, 96, 144, 0.59);
+        }
+
+        #column-select {
+            margin-left: 25px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu li {
+            cursor: pointer;
+        }
+
+        .dropdown-menu li.selected {
+            background: #e3e3e3;
+        }
+    </style>
+{% endblock %}
+
+{% block title %} Prijave za vpis {% endblock %}
+
+{% block left_column %}
+    {{ block.super }}
+
+    <form id="filter" class="well bs-component">
+        <h4>Filter:</h4>
+        <div class="form-group">
+            <label class="control-label" for="user__first_name">Ime</label>
+            <input class="form-control" id="user__first_name" name="user__first_name" type="text" placeholder="Ime">
+        </div>
+
+        <div class="form-group">
+            <label class="control-label" for="user__last_name">Priimek</label>
+            <input class="form-control" id="user__last_name" name="user__last_name" type="text" placeholder="Priimek">
+        </div>
+
+        <div class="form-group">
+            <label class="control-label" for="emso">EMŠO</label>
+            <input class="form-control" id="emso" name="emso" type="text" placeholder="EMŠO">
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block body %}
+
+
+    {% if user|is_referent %}
+        <a href="{% url 'applications:add' %}" id="add_button" class="btn btn-primary">Dodaj</a>
+    {% endif %}
+    <a href="{% url 'applications:list_of_candidates_PDF' %}" class="btn btn-default"> Ustvari PDF </a>
+    <table id="table" class="table table-striped table-bordered">
+        <thead>
+        <tr>
+            <th>
+                <div id="column-select-dropdown" class="dropdown">
+                <span id="column-select" class="glyphicon glyphicon-th-list" type="button"
+                      id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="true">
+                </span>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li class="selected" data-field-name="application_code"><a>Številka prijave</a></li>
+                        <li class="selected" data-field-name="user__first_name"><a>Ime</a></li>
+                        <li class="selected" data-field-name="user__last_name"><a>Priimek</a></li>
+                        <li class="" data-field-name="emso"><a>EMŠO</a></li>
+                        <li class="" data-field-name="finished_education__description"><a>Zaključek srednje šole</a>
+                        </li>
+                        <li class="" data-field-name="first_selection"><a>Prva izbira</a></li>
+                        <li class="" data-field-name="second_selection"><a>Druga izbira</a></li>
+                        <li class="" data-field-name="third_selection"><a>Tretja izbira</a></li>
+                    </ul>
+                </div>
+            </th>
+            <th>Številka prijave</th>
+            <th>Ime</th>
+            <th>Priimek</th>
+            <th>EMŠO</th>
+            <th>Zaključek srednje šole</th>
+            <th>Prva izbira</th>
+            <th>Druga izbira</th>
+            <th>Tretja izbira</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+
+    {% if user|is_referent %}
+        <div id="confirm" class="modal fade" role="dialog" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        Ali resnično želiti izbrisati?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" data-dismiss="modal" class="btn btn-primary" id="delete">
+                            Izbriši
+                        </button>
+                        <button type="button" data-dismiss="modal" class="btn">Prekliči</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript" charset="utf8"
+            src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8"
+            src="//cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            $.ajaxSetup({
+                headers: {"X-CSRFToken": "{{csrf_token}}"}
+            });
+        });
+
+        var table = $('#table').DataTable({
+            ajax: {
+                url: "/application/students",
+                dataSrc: ''
+            }, columns: [
+                {data: null},
+                {data: "application_code"},
+                {data: "user__first_name"},
+                {data: "user__last_name"},
+                {data: "emso"},
+                {data: "finished_education__description"},
+                {data: "first_selection"},
+                {data: "second_selection"},
+                {data: "third_selection"},
+            ],
+            rowId: 'id',
+            order: [[1, "asc"]],
+            aoColumnDefs: [
+                {
+                    "targets": 0,
+                    "data": null,
+                    {% if user|is_referent %}
+                        "defaultContent": '<span class="action_icon edit glyphicon glyphicon-pencil" ></span><span class="action_icon delete glyphicon glyphicon-remove"></span><span class="action_icon constraints glyphicon glyphicon-download-alt" ></span>',
+                    {% else %}
+                        "defaultContent": '<span class="action_icon constraints glyphicon glyphicon-download-alt" ></span>',
+                    {% endif %}
+                    "orderable": false,
+                    "searchable": false,
+                    "width": "100px"
+                },
+                {
+                    "targets": [4, 5, 6, 7, 8],
+                    "visible": false
+                }
+            ],
+            language: {
+                processing: "Nalaganje...",
+                search: "Išči:",
+                lengthMenu: "",
+                info: "Število vrstic: _TOTAL_",
+                infoEmpty: "Število vrstic: 0",
+                infoFiltered: "",
+                infoPostFix: "",
+                loadingRecords: "Iskanje rezultatov...",
+                zeroRecords: "Ni podatkov",
+                emptyTable: "Ni podatkov",
+                paginate: {
+                    first: "Prva",
+                    previous: "Prejšnja",
+                    next: "Naslednja",
+                    last: "Zadnja"
+                }
+            }
+        });
+
+        {% if user|is_referent %}
+            $('#table tbody').on('click', '.edit', function () {
+                var student = table.row($(this).parents('tr')).data();
+                window.location.href = "/application/add/" + student.id;
+            });
+
+            $('#table tbody').on('click', '.delete', function () {
+                var student = table.row($(this).parents('tr')).data();
+                $('#confirm').modal({backdrop: 'static', keyboard: false})
+                        .one('click', '#delete', function (e) {
+                            $.ajax({
+                                type: "GET",
+                                url: "/application/delete/" + student.id,
+                            }).done(function () {
+                                table.draw();
+                            });
+                        });
+            });
+        {% endif %}
+
+        $('#table tbody').on('click', '.glyphicon-download-alt', function () {
+            var student = table.row($(this).parents('tr')).data();
+            window.location.href = "/application/" + student.id + "/PDF";
+        });
+
+        $('#table tbody').on('click', '.glyphicon-cog', function () {
+            var student = table.row($(this).parents('tr')).data();
+            window.location.href = "/application/" + student.id + "/details";
+        });
+
+        $('#table tbody').on('click', 'tr', function () {
+            var student = table.row($(this)).data();
+            window.location.href = "/application/" + student.id + "/details";
+        });
+
+        $("#filter").on('keyup', 'input', function (event) {
+            var query = $("form#filter :input").filter(function (index, element) {
+                return $(element).val() != "";
+            }).serialize();
+            $.ajax({
+                type: "GET",
+                url: "/application/students?" + query,
+            }).done(function (data) {
+                table.clear();
+                table.rows.add(data);
+                table.draw();
+            });
+        });
+
+        $('#column-select').on('click', function () {
+            $('#column-select-dropdown').trigger('click.bs.dropdown');
+        });
+
+        $("#column-select-dropdown .dropdown-menu").on('click', 'li', function (e) {
+            e.stopPropagation();
+            $(this).toggleClass("selected");
+            var fieldName = $(this).attr("data-field-name");
+            var fieldTitle = $(this).children().first().html();
+            if ($(this).hasClass("selected")) {
+                var filterInputElement =
+                        '<div class="form-group">' +
+                        '<label class="control-label" for="' + fieldName + '">' + fieldTitle + '</label>' +
+                        '<input class="form-control" id="' + fieldName + '" name="' + fieldName + '" type="text" placeholder="' + fieldTitle + '">' +
+                        '</div>';
+//            if($('#filter').children().length > 0 && $(this).index() > 0){
+//                $('#filter').children(':eq('+($(this).index()-1)+')').after(filterInputElement);
+//            }else if($('#filter').children().length < $(this).index() -1){
+//            }else{
+//                $('#filter').prepend(filterInputElement);
+//            }
+                $('#filter').append(filterInputElement);
+            } else {
+                $("#filter input#" + fieldName).closest(".form-group").remove();
+            }
+            var column = table.column($(this).index() + 1);
+            column.visible(!column.visible());
+        });
+
+    </script>
+{% endblock %}

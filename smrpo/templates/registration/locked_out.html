@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% load login_tags %}
+
+{% block title %} Račun zaklenjen {% endblock %}
+
+{% block body %}
+
+<div class="row">
+
+    <div class="col-md-6 col-md-offset-3 text-center">
+        <h3>Zaradi {{ failure_limit }} neuspelih poskusov prijave je bil vaš IP naslov zaklenjen za {{ cooloff_time|get_hours_from_full_time_format }} uro.</h3>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% load bootstrap3 %}
+
+{% block title %} Pogoji {% endblock %}
+
+{% block body %}
+    <h3>Dodajte pogoje za študijski program {{ study_program.name }}</h3>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form id="type" action="" method="post" novalidate>
+                {% csrf_token %}
+                {% bootstrap_form type_form %}
+                <div id="r_00" style="display: none">
+                    {% bootstrap_form r_00_form %}
+                </div>
+                <div id="r_p1p3" style="display: none">
+                    {% bootstrap_form r_p1_p3_form %}
+                </div>
+                {% buttons %}
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">
+                            Shrani
+                        </button>
+                    </div>
+                {% endbuttons %}
+            </form>
+            <input id="type_" type="hidden" value="{{ type_|default:"nothing" }}">
+            <input id="show_priority_course" type="hidden" value="{{ show_priority_course|default:"no" }}">
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    {{ block.super }}
+
+    <script>
+        var profession = $('#id_r_P1_P3-profession').parent();
+        $('#id_type-type').on('change', function() {
+            selected = $(this).find('option:selected').text();
+            if (selected == "Navadni") {
+                $('#r_00').css('display', 'block');
+                $('#r_p1p3').css('display', 'none');
+            }
+            else if (selected == "Poljuben poklic, določen predmet") {
+                $('#r_p1p3').css('display', 'block');
+                $('#r_00').css('display', 'none');
+                profession.css('display', 'none');
+            }
+            else if (selected == "Določen poklic, pogojno določeni predmet") {
+                $('#r_p1p3').css('display', 'block');
+                $('#r_00').css('display', 'none');
+                profession.css('display', 'block');
+            }
+            else {
+                $('#r_p1p3').css('display', 'none');
+                $('#r_00').css('display', 'none');
+            }
+        });
+
+        show_type = $('#type_').val()
+        if (show_type == "00"){
+            $('#r_00').css('display', 'block');
+        }
+        else if (show_type == "P1") {
+            $('#r_p1p3').css('display', 'block');
+            profession.css('display', 'none');
+        }
+        else if (show_type == "P3") {
+            $('#r_p1p3').css('display', 'block');
+            profession.css('display', 'block');
+        }
+
+        show_priority_course = $('#show_priority_course').val()
+        priority_course = $('#id_r_P1_P3-priority_course').parent();
+        w_gen_priority_course_matura = $('#id_r_P1_P3-w_gen_priority_course_matura').parent();
+        w_gen_priority_course_general = $('#id_r_P1_P3-w_gen_priority_course_general').parent();
+        w_pro_priority_course_matura = $('#id_r_P1_P3-w_pro_priority_course_matura').parent();
+        w_pro_priority_course_general = $('#id_r_P1_P3-w_pro_priority_course_general').parent();
+
+        matura_courses = $('#id_r_P1_P3-matura_courses').parent();
+        w_matura_courses = $('#id_r_P1_P3-w_matura_course').parent();
+
+        if(show_priority_course == "no") {
+            priority_course.css('display', 'none');
+            w_gen_priority_course_matura.css('display', 'none');
+            w_gen_priority_course_general.css('display', 'none');
+            w_pro_priority_course_matura.css('display', 'none');
+            w_pro_priority_course_general.css('display', 'none');
+        }
+        else {
+            matura_courses.css('display', 'none');
+            w_matura_courses.css('display', 'none');
+        }
+
+        $('#id_r_P1_P3-has_priority_course').change(function() {
+            if($(this).is(":checked")) {
+                priority_course.css('display', 'block');
+                w_gen_priority_course_matura.css('display', 'block');
+                w_gen_priority_course_general.css('display', 'block');
+                w_pro_priority_course_matura.css('display', 'block');
+                w_pro_priority_course_general.css('display', 'block');
+                matura_courses.css('display', 'none');
+                w_matura_courses.css('display', 'none');
+            }
+            else {
+                priority_course.css('display', 'none');
+                w_gen_priority_course_matura.css('display', 'none');
+                w_gen_priority_course_general.css('display', 'none');
+                w_pro_priority_course_matura.css('display', 'none');
+                w_pro_priority_course_general.css('display', 'none');
+                matura_courses.css('display', 'block');
+                w_matura_courses.css('display', 'block');
+            }
+        });
+    </script>
+{% endblock %}

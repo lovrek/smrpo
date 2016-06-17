@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        {% load staticfiles %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/jquery-ui.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+
+        {% block head %}{% endblock %}
+        <title>{% block title %}{% endblock %}</title>
+    </head>
+
+    <body>
+
+        {% include "navbar.html" %}
+
+        <!-- Page Content -->
+        <div class="container main-container page-wrap">
+            <div class="row">
+
+                <div class="col-lg-2 side-column">
+                    {% if user.is_authenticated %}
+                        <div class="alert alert-success">
+                          <strong>Čas zadnje prijave:</strong><p>{{ user.last_login }}</p>
+                        </div>
+                    {% else %}
+                    {% endif %}
+                    {% block left_column %}{% endblock %}
+                </div>
+
+                <div class="col-lg-8">
+
+                    {% block messages %}
+                        {% if messages %}
+                            <ul class="messages list-unstyled">
+                                {% for message in messages %}
+                                    <li
+                                        {% if message.tags %} class="{{ message.tags }} alert alert-{{ message.tags }} "{% endif %}>{{ message }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endblock messages %}
+
+                    {% block body %}{% endblock %}
+
+                </div>
+
+                <div class="col-lg-2 side-column">
+                    {% block right_column %}{% endblock %}
+                </div>
+
+            </div>
+        </div>
+        <!-- /.container -->
+
+        <footer class="site-footer">
+            <p>Vpis na študijske programe 2016/2017</p>
+            <p>&copy; Smrpo - skupina 6</p>
+        </footer>
+
+        <script src="{% static 'js/jquery.js' %}"></script>
+        <script src="{% static 'js/jquery-ui.min.js' %}"></script>
+        <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+        {% block javascript %}{% endblock %}
+    </body>
+
+</html>
